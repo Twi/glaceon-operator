@@ -337,7 +337,7 @@ func (r *MachineProxyReconciler) secretForMachineProxy(ctx context.Context, mach
 	ls := labelsForMachineProxy(machineproxy.Name)
 	org := machineproxy.Spec.Org
 	region := machineproxy.Spec.Region
-	name := "glaceon-" + machineproxy.Name
+	name := machineproxy.Name
 
 	config, err := flyctl.WireGuardCreate(ctx, org, region, name)
 	if err != nil {

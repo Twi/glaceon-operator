@@ -73,7 +73,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: ghcr.io/twi/glaceon/operator:v0.0.1
+        image: controller
         imagePullPolicy: Always
         name: manager
         env:
