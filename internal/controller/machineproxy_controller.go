@@ -465,9 +465,6 @@ func (r *MachineProxyReconciler) deploymentForMachineProxy(machineproxy *glaceon
 								Drop: []corev1.Capability{
 									"ALL",
 								},
-								Add: []corev1.Capability{
-									"CAP_NET_BIND_SERVICE",
-								},
 							},
 						},
 						Env: []corev1.EnvVar{
