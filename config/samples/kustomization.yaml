@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- glaceon_v1alpha1_machineproxy.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

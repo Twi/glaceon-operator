@@ -1,0 +1,17 @@
+Creating WireGuard peer "something-else" in region "yyz" for organization personal
+
+!!!! WARNING: Output includes private key. Private keys cannot be recovered !!!!
+!!!! after creating the peer; if you lose the key, you'll need to remove    !!!!
+!!!! and re-add the peering connection.                                     !!!!
+
+[Interface]
+PrivateKey = ldmzYKB+IH9IOFFXNH1zRptfgvj35yp1qfMJBWoD3CQ=
+Address = fdaa:0:641b:a7b:9285:0:a:1f02/120
+DNS = fdaa:0:641b::3
+
+[Peer]
+PublicKey = qD38OvXdLJwjXWALqUuDpERlNS4FzFlrwG/c2roQZRs=
+AllowedIPs = fdaa:0:641b::/48
+Endpoint = yyz2.gateway.6pn.dev:51820
+PersistentKeepalive = 15
+
