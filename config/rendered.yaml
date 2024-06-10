@@ -472,7 +472,7 @@ spec:
             secretKeyRef:
               key: FLY_API_TOKEN
               name: glaceon-operator
-        image: ghcr.io/twi/glaceon/operator:v0.1.0
+        image: ghcr.io/twi/glaceon/operator:v0.1.1
         imagePullPolicy: Always
         name: manager
         resources:

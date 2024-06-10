@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -195,7 +196,7 @@ func (r *MachineProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	secretFound := &corev1.Secret{}
-	if err := r.Get(ctx, types.NamespacedName{Name: "glaceon-" + machineproxy.Name, Namespace: machineproxy.Namespace}, secretFound); err != nil && apierrors.IsNotFound(err) {
+	if err := r.Get(ctx, types.NamespacedName{Name: machineproxy.Name, Namespace: machineproxy.Namespace}, secretFound); err != nil && apierrors.IsNotFound(err) {
 		// define a new secret
 		sec, err := r.secretForMachineProxy(ctx, machineproxy)
 		if err != nil {
@@ -324,7 +325,13 @@ func (r *MachineProxyReconciler) doFinalizerOperationsForMachineProxy(ctx contex
 	// to set the ownerRef which means that the Deployment will be deleted by the Kubernetes API.
 	// More info: https://kubernetes.io/docs/tasks/administer-cluster/use-cascading-deletion/
 
-	if err := flyctl.WireGuardRemove(ctx, cr.Spec.Org, "glaceon-"+cr.Name); err != nil {
+	secretFound := &corev1.Secret{}
+	if err := r.Get(ctx, types.NamespacedName{Name: cr.Name, Namespace: cr.Namespace}, secretFound); err != nil && apierrors.IsNotFound(err) {
+		log.Error(err, "Failed to find secret, manual intervention may be required")
+		return
+	}
+
+	if err := flyctl.WireGuardRemove(ctx, cr.Spec.Org, secretFound.Annotations["glaceon.friendshipcastle.zip/wireguard-peer-name"]); err != nil {
 		log.Error(err, "Failed to delete wireguard peer, manual intervention may be required")
 	}
 
@@ -337,18 +344,23 @@ func (r *MachineProxyReconciler) secretForMachineProxy(ctx context.Context, mach
 	ls := labelsForMachineProxy(machineproxy.Name)
 	org := machineproxy.Spec.Org
 	region := machineproxy.Spec.Region
-	name := machineproxy.Name
 
-	config, err := flyctl.WireGuardCreate(ctx, org, region, name)
+	randomPrefix := RandStringBytes(16)
+	name := randomPrefix + "-" + machineproxy.Name
+
+	config, err := flyctl.WireGuardCreate(ctx, org, region, randomPrefix+name)
 	if err != nil {
 		return nil, fmt.Errorf("can't create wireguard peer: %w", err)
 	}
 
 	sec := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      machineproxy.Name,
 			Namespace: machineproxy.Namespace,
 			Labels:    ls,
+			Annotations: map[string]string{
+				"glaceon.friendshipcastle.zip/wireguard-peer-name": name,
+			},
 		},
 		Immutable: &[]bool{true}[0],
 		Data: map[string][]byte{
@@ -529,4 +541,14 @@ func (r *MachineProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&glaceonv1alpha1.MachineProxy{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
